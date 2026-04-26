@@ -1,0 +1,61 @@
+# ROS2 Environment Check
+
+- generated_at: 2026-04-27 05:36:04 CST
+- hostname: hongqi-B85-HD3
+- user: root
+- pwd: /home/hongqi/Perception
+
+## OS
+Linux hongqi-B85-HD3 6.8.0-107-generic #107~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Wed Mar 18 23:40:43 UTC  x86_64 x86_64 x86_64 GNU/Linux
+
+## Linux Release
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.5 LTS (Jammy Jellyfish)"
+VERSION_CODENAME=jammy
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=jammy
+
+## ROS_DISTRO (env)
+humble
+
+## ROS_VERSION (env)
+2
+
+## ROS_PYTHON_VERSION (env)
+3
+
+## ros2 path
+/opt/ros/humble/bin/ros2
+
+## ros2 --version
+(command failed)
+usage: ros2 [-h] [--use-python-default-buffering]
+            Call `ros2 <command> -h` for more detailed usage. ...
+ros2: error: unrecognized arguments: --version
+
+## ROS2 packages (dpkg)
+(command failed)
+bash: line 1: rg: command not found
+
+## Python
+Python 3.10.12
+
+## Colcon
+(command failed)
+usage: colcon [-h] [--log-base LOG_BASE] [--log-level LOG_LEVEL]
+              {build,extension-points,extensions,graph,info,list,metadata,test,test-result,version-check}
+              ...
+colcon: error: argument verb_name: invalid choice: '--version' (choose from 'build', 'extension-points', 'extensions', 'graph', 'info', 'list', 'metadata', 'test', 'test-result', 'version-check')
+
+## RMW implementation
+(command failed)
+
+## ROS domain id
+1
