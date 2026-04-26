@@ -16,3 +16,11 @@ log/
 
 # Optional local files
 *.tmp
+
+# SSH keys / credentials
+id_ed25519
+id_ed25519.pub
+id_rsa
+id_rsa.pub
+github_ssh_key
+github_ssh_key.pub
