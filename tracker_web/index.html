@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weekly Tracker 可视化看板</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #141b34;
+      --text: #e9edff;
+      --muted: #9eabcf;
+      --accent: #5b8cff;
+      --ok: #2db783;
+      --warn: #f5a524;
+      --danger: #ef5b5b;
+      --border: #283253;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 { margin: 0 0 12px; }
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .metric {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+    .muted { color: var(--muted); font-size: 13px; }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    input, select, textarea, button {
+      background: #11182f;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+    textarea { width: 100%; min-height: 80px; }
+    button {
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.secondary { background: #2a355e; }
+    .goal-row {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .goal-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .progress {
+      height: 10px;
+      background: #1a2448;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .bar {
+      height: 100%;
+      background: linear-gradient(90deg, #5b8cff, #49dcb1);
+    }
+    .pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+    .s-not_started { background: #3a4266; }
+    .s-in_progress { background: #2d5fd3; }
+    .s-blocked { background: #a86a18; }
+    .s-done { background: #1f8c62; }
+    .small { font-size: 12px; color: var(--muted); }
+    @media (max-width: 920px) {
+      .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Weekly Tracker 可视化看板</h1>
+    <p class="muted">用于每周目标制定、过程跟踪和下周滚动规划（与 CLI 共用同一数据文件）</p>
+
+    <section class="grid grid-3" id="dashboard"></section>
+
+    <section class="card" style="margin-top: 12px;">
+      <h2>周选择与总览</h2>
+      <div class="toolbar">
+        <label>选择周：</label>
+        <select id="weekSelect"></select>
+        <button class="secondary" id="refreshBtn">刷新</button>
+      </div>
+      <p id="weekTheme" class="muted" style="margin-top: 10px;"></p>
+      <div class="progress"><div class="bar" id="weekBar" style="width: 0%"></div></div>
+      <p class="small" id="weekScoreText"></p>
+    </section>
+
+    <section class="grid grid-2" style="margin-top: 12px;">
+      <div class="card">
+        <h3>创建新周</h3>
+        <div class="toolbar">
+          <input id="newWeekId" placeholder="2026-W19" />
+          <input id="newWeekTheme" placeholder="Camera+Fusion 上手" />
+          <button id="createWeekBtn">创建</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>自动滚动到下周</h3>
+        <div class="toolbar">
+          <input id="fromWeek" placeholder="来源周 2026-W19" />
+          <input id="toWeek" placeholder="目标周 2026-W20" />
+        </div>
+        <div class="toolbar" style="margin-top:8px;">
+          <input id="toTheme" placeholder="下周主题（可选）" />
+          <label class="small"><input type="checkbox" id="copyAll" />复制全部目标</label>
+          <button id="planNextBtn">生成下周计划</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top: 12px;">
+      <h2>本周目标</h2>
+      <div class="toolbar" style="margin-bottom: 10px;">
+        <input id="goalTitle" placeholder="新增目标标题" style="min-width: 260px;" />
+        <input id="goalMetric" placeholder="验收指标" />
+        <input id="goalWeight" type="number" min="1" value="20" />
+        <button id="addGoalBtn">添加目标</button>
+      </div>
+      <div id="goalList"></div>
+    </section>
+
+    <section class="grid grid-2" style="margin-top: 12px;">
+      <div class="card">
+        <h3>周复盘</h3>
+        <textarea id="retroText" placeholder="本周做得好/阻塞点/改进点"></textarea>
+        <button id="saveRetroBtn" style="margin-top:8px;">保存复盘</button>
+      </div>
+      <div class="card">
+        <h3>下周重点</h3>
+        <textarea id="focusText" placeholder="下周最关键的3件事"></textarea>
+        <button id="saveFocusBtn" style="margin-top:8px;">保存下周重点</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const statusMap = {
+      not_started: "未开始",
+      in_progress: "进行中",
+      blocked: "阻塞",
+      done: "完成",
+    };
+
+    let appData = { weeks: {} };
+    let currentWeek = "";
+
+    async function api(path, method = "GET", body = null) {
+      const res = await fetch(path, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : null,
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        throw new Error(data.error || "请求失败");
+      }
+      return data;
+    }
+
+    function calcWeekScore(goals) {
+      if (!goals || goals.length === 0) return 0;
+      const total = goals.reduce((s, g) => s + Number(g.weight || 0), 0);
+      if (!total) return 0;
+      const weighted = goals.reduce((s, g) => s + (Number(g.progress || 0) / 100) * Number(g.weight || 0), 0);
+      return Math.round((weighted / total) * 1000) / 10;
+    }
+
+    function renderDashboard(dashboard) {
+      const box = document.getElementById("dashboard");
+      if (!dashboard.length) {
+        box.innerHTML = '<div class="card">暂无数据，请先创建一周计划。</div>';
+        return;
+      }
+      box.innerHTML = dashboard.map(d => `
+        <div class="card">
+          <div class="muted">${d.week_id}</div>
+          <div style="font-weight:600; margin-top:6px;">${d.theme || "-"}</div>
+          <div class="metric">${d.score}%</div>
+          <div class="small">目标数 ${d.goal_count}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderWeekOptions() {
+      const select = document.getElementById("weekSelect");
+      const weekIds = Object.keys(appData.weeks).sort();
+      select.innerHTML = weekIds.map(w => `<option value="${w}">${w}</option>`).join("");
+      if (!currentWeek || !weekIds.includes(currentWeek)) {
+        currentWeek = weekIds[weekIds.length - 1] || "";
+      }
+      select.value = currentWeek;
+    }
+
+    function renderWeekDetail() {
+      if (!currentWeek || !appData.weeks[currentWeek]) {
+        document.getElementById("weekTheme").textContent = "未选择周";
+        document.getElementById("goalList").innerHTML = "";
+        document.getElementById("weekBar").style.width = "0%";
+        document.getElementById("weekScoreText").textContent = "";
+        return;
+      }
+      const week = appData.weeks[currentWeek];
+      const goals = week.goals || [];
+      const score = calcWeekScore(goals);
+
+      document.getElementById("weekTheme").textContent = `主题：${week.theme || "-"}`;
+      document.getElementById("weekBar").style.width = `${score}%`;
+      document.getElementById("weekScoreText").textContent = `综合完成度：${score}%`;
+      document.getElementById("retroText").value = week.retrospective || "";
+      document.getElementById("focusText").value = week.next_week_focus || "";
+
+      const goalList = document.getElementById("goalList");
+      if (!goals.length) {
+        goalList.innerHTML = '<p class="muted">本周暂无目标，请先添加。</p>';
+        return;
+      }
+
+      goalList.innerHTML = goals.map(g => `
+        <div class="goal-row">
+          <div class="goal-top">
+            <div>
+              <strong>#${g.id} ${g.title}</strong>
+              <div class="small">指标: ${g.metric} | 权重: ${g.weight}</div>
+            </div>
+            <span class="pill s-${g.status}">${statusMap[g.status] || g.status}</span>
+          </div>
+          <div class="progress"><div class="bar" style="width:${g.progress}%"></div></div>
+          <div class="small">进度：${g.progress}%</div>
+          <div class="toolbar" style="margin-top:8px;">
+            <input id="p_${g.id}" type="number" min="0" max="100" value="${g.progress}" />
+            <select id="s_${g.id}">
+              <option value="not_started" ${g.status === "not_started" ? "selected" : ""}>未开始</option>
+              <option value="in_progress" ${g.status === "in_progress" ? "selected" : ""}>进行中</option>
+              <option value="blocked" ${g.status === "blocked" ? "selected" : ""}>阻塞</option>
+              <option value="done" ${g.status === "done" ? "selected" : ""}>完成</option>
+            </select>
+            <input id="n_${g.id}" placeholder="本次备注（可选）" style="min-width:260px;" />
+            <button onclick="updateGoal(${g.id})">更新</button>
+          </div>
+          ${(g.notes && g.notes.length) ? `<div class="small" style="margin-top:6px;">最近记录：${g.notes.slice(-2).join("；")}</div>` : ""}
+        </div>
+      `).join("");
+    }
+
+    async function refreshAll() {
+      const res = await api("/api/data");
+      appData = res.data;
+      renderDashboard(res.dashboard || []);
+      renderWeekOptions();
+      renderWeekDetail();
+    }
+
+    async function createWeek() {
+      const week_id = document.getElementById("newWeekId").value.trim();
+      const theme = document.getElementById("newWeekTheme").value.trim();
+      if (!week_id || !theme) return alert("请填写周编号和主题");
+      await api("/api/weeks", "POST", { week_id, theme });
+      currentWeek = week_id;
+      await refreshAll();
+    }
+
+    async function addGoal() {
+      if (!currentWeek) return alert("请先选择周");
+      const title = document.getElementById("goalTitle").value.trim();
+      const metric = document.getElementById("goalMetric").value.trim() || "可交付结果";
+      const weight = Number(document.getElementById("goalWeight").value || 20);
+      if (!title) return alert("请填写目标标题");
+      await api("/api/goals", "POST", { week_id: currentWeek, title, metric, weight });
+      document.getElementById("goalTitle").value = "";
+      await refreshAll();
+    }
+
+    async function updateGoal(goalId) {
+      const progress = Number(document.getElementById(`p_${goalId}`).value || 0);
+      const status = document.getElementById(`s_${goalId}`).value;
+      const note = document.getElementById(`n_${goalId}`).value.trim();
+      await api("/api/goals/update", "POST", {
+        week_id: currentWeek,
+        goal_id: goalId,
+        progress,
+        status,
+        note,
+      });
+      await refreshAll();
+    }
+
+    async function saveRetro() {
+      if (!currentWeek) return alert("请先选择周");
+      const retrospective = document.getElementById("retroText").value;
+      await api("/api/weeks/notes", "POST", { week_id: currentWeek, retrospective });
+      await refreshAll();
+    }
+
+    async function saveFocus() {
+      if (!currentWeek) return alert("请先选择周");
+      const next_week_focus = document.getElementById("focusText").value;
+      await api("/api/weeks/notes", "POST", { week_id: currentWeek, next_week_focus });
+      await refreshAll();
+    }
+
+    async function planNext() {
+      const from_week = document.getElementById("fromWeek").value.trim();
+      const to_week = document.getElementById("toWeek").value.trim();
+      const theme = document.getElementById("toTheme").value.trim();
+      const copy_all = document.getElementById("copyAll").checked;
+      if (!from_week || !to_week) return alert("请填写来源周和目标周");
+      await api("/api/weeks/plan-next", "POST", { from_week, to_week, theme, copy_all });
+      currentWeek = to_week;
+      await refreshAll();
+    }
+
+    document.getElementById("createWeekBtn").addEventListener("click", () => createWeek().catch(e => alert(e.message)));
+    document.getElementById("addGoalBtn").addEventListener("click", () => addGoal().catch(e => alert(e.message)));
+    document.getElementById("saveRetroBtn").addEventListener("click", () => saveRetro().catch(e => alert(e.message)));
+    document.getElementById("saveFocusBtn").addEventListener("click", () => saveFocus().catch(e => alert(e.message)));
+    document.getElementById("planNextBtn").addEventListener("click", () => planNext().catch(e => alert(e.message)));
+    document.getElementById("refreshBtn").addEventListener("click", () => refreshAll().catch(e => alert(e.message)));
+    document.getElementById("weekSelect").addEventListener("change", (e) => {
+      currentWeek = e.target.value;
+      renderWeekDetail();
+    });
+
+    refreshAll().catch(e => alert(e.message));
+    window.updateGoal = (id) => updateGoal(id).catch(e => alert(e.message));
+  </script>
+</body>
+</html>

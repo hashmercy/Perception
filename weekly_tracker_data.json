@@ -1,0 +1,48 @@
+{
+  "weeks": {
+    "2026-W19": {
+      "theme": "Camera+Fusion 上手",
+      "created_at": "2026-04-26T18:00:03",
+      "goals": [
+        {
+          "id": 1,
+          "title": "跑通ROS2相机检测最小闭环",
+          "metric": "订阅图像->检测->发布结果，稳定运行10分钟",
+          "weight": 30,
+          "progress": 0,
+          "status": "not_started",
+          "notes": []
+        },
+        {
+          "id": 2,
+          "title": "接入预训练YOLO推理并可视化",
+          "metric": "输出bbox并保存10帧可视化结果",
+          "weight": 25,
+          "progress": 0,
+          "status": "not_started",
+          "notes": []
+        },
+        {
+          "id": 3,
+          "title": "建立基础性能统计",
+          "metric": "记录FPS与端到端时延并形成1页报告",
+          "weight": 25,
+          "progress": 0,
+          "status": "not_started",
+          "notes": []
+        },
+        {
+          "id": 4,
+          "title": "完成本周复盘文档",
+          "metric": "已完成/阻塞点/下周动作各3条",
+          "weight": 20,
+          "progress": 0,
+          "status": "not_started",
+          "notes": []
+        }
+      ],
+      "retrospective": "",
+      "next_week_focus": ""
+    }
+  }
+}
