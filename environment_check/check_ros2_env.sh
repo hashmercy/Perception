@@ -35,16 +35,16 @@ safe_run() {
 
   safe_run "OS" uname -a
   safe_run "Linux Release" bash -lc "if [ -f /etc/os-release ]; then cat /etc/os-release; else echo 'no /etc/os-release'; fi"
-  safe_run "ROS_DISTRO (env)" bash -lc "printenv ROS_DISTRO"
-  safe_run "ROS_VERSION (env)" bash -lc "printenv ROS_VERSION"
-  safe_run "ROS_PYTHON_VERSION (env)" bash -lc "printenv ROS_PYTHON_VERSION"
+  safe_run "ROS_DISTRO (env)" bash -lc "echo \${ROS_DISTRO:-unset}"
+  safe_run "ROS_VERSION (env)" bash -lc "echo \${ROS_VERSION:-unset}"
+  safe_run "ROS_PYTHON_VERSION (env)" bash -lc "echo \${ROS_PYTHON_VERSION:-unset}"
   safe_run "ros2 path" bash -lc "which ros2"
-  safe_run "ros2 --version" bash -lc "ros2 --version"
-  safe_run "ROS2 packages (dpkg)" bash -lc "dpkg -l | rg '^ii  ros-(humble|jazzy|iron|foxy|rolling)-(ros-base|desktop|desktop-full)'"
+  safe_run "ros2 cli package version" bash -lc "dpkg -l | awk '/^ii  ros-[a-z0-9-]+-ros2cli/ {print \$2\" \"\$3}'"
+  safe_run "ROS2 packages (dpkg)" bash -lc "dpkg -l | awk '/^ii  ros-(humble|jazzy|iron|foxy|rolling)-(ros-base|desktop|desktop-full)/ {print \$2\" \"\$3}'"
   safe_run "Python" python3 --version
-  safe_run "Colcon" bash -lc "colcon --version"
-  safe_run "RMW implementation" bash -lc "printenv RMW_IMPLEMENTATION"
-  safe_run "ROS domain id" bash -lc "printenv ROS_DOMAIN_ID"
+  safe_run "Colcon" bash -lc "colcon --help | sed -n '1,3p'"
+  safe_run "RMW implementation" bash -lc "echo \${RMW_IMPLEMENTATION:-unset}"
+  safe_run "ROS domain id" bash -lc "echo \${ROS_DOMAIN_ID:-unset}"
 } >"${OUT_FILE}"
 
 rm -f /tmp/_env_check_tmp

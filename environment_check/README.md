@@ -14,6 +14,18 @@
 
 - `env_<hostname>_<timestamp>.txt`
 
+## 对比两台电脑报告
+
+```bash
+./environment_check/compare_env_reports.sh <家里报告.txt> <办公室报告.txt>
+```
+
+或不带参数自动对比最近两份报告：
+
+```bash
+./environment_check/compare_env_reports.sh
+```
+
 ## 对比重点
 
 - `ROS_DISTRO`
